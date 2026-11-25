@@ -1,0 +1,36 @@
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  min-height: 100vh;
+}
+
+.body {
+  padding: 1.25rem 1.5rem;
+  line-height: 1.6;
+}
+
+.comments {
+  border-left: 1px solid color-mix(in srgb, CanvasText 15%, transparent);
+  padding: 1.25rem 1rem;
+  background: color-mix(in srgb, Canvas 92%, CanvasText 8%);
+}
+
+@media (max-width: 720px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .comments {
+    border-left: none;
+    border-top: 1px solid color-mix(in srgb, CanvasText 15%, transparent);
+  }
+}

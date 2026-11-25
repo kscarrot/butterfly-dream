@@ -1,0 +1,16 @@
+[package]
+name = "doc-lsp"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Language server for jmd documents"
+
+[[bin]]
+name = "doc-lsp"
+path = "src/main.rs"
+
+[dependencies]
+doc-core = { workspace = true }
+tower-lsp = { workspace = true }
+tokio = { workspace = true }
+serde_json = { workspace = true }

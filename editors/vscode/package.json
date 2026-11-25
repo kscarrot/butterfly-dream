@@ -1,0 +1,52 @@
+{
+  "$schema": "./package.schema.json",
+  "name": "butterfly-dream",
+  "displayName": "Butterfly Dream",
+  "description": "Language support and preview for jmd documents",
+  "version": "0.1.0",
+  "publisher": "butterfly-dream",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "jmd",
+        "aliases": [
+          "JMD",
+          "jmd"
+        ],
+        "extensions": [
+          ".jmd"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "jmd",
+        "scopeName": "source.jmd",
+        "path": "./syntaxes/jmd.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "butterflyDream.openPreview",
+        "title": "Butterfly Dream: Open Preview"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.7.2"
+  }
+}

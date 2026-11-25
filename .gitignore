@@ -1,0 +1,23 @@
+# Rust
+/target/
+**/*.rs.bk
+
+# Node / VS Code extension
+node_modules/
+editors/vscode/out/
+editors/vscode/bin/*
+!editors/vscode/bin/.gitkeep
+editors/vscode/webview/pkg/
+*.vsix
+*.tsbuildinfo
+
+# Generated HTML previews from `pnpm run dev:html`
+examples/*.html
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/settings.json
+*.swp
+*.swo

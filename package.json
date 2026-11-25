@@ -1,0 +1,15 @@
+{
+  "$schema": "./package.schema.json",
+  "name": "butterfly-dream",
+  "private": true,
+  "packageManager": "pnpm@10.27.0",
+  "scripts": {
+    "build:wasm": "wasm-pack build crates/doc-wasm --target web --out-dir ../../editors/vscode/webview/pkg",
+    "build:lsp": "cargo build --release -p doc-lsp && mkdir -p editors/vscode/bin && cp target/release/doc-lsp editors/vscode/bin/",
+    "build:vscode": "pnpm --dir editors/vscode run compile",
+    "build:all": "pnpm run build:wasm && pnpm run build:lsp && pnpm run build:vscode",
+    "dev:vscode": "pnpm run build:vscode && cursor --extensionDevelopmentPath=./editors/vscode ./examples",
+    "dev:html": "cargo run -q -p doc-core --example render_examples"
+  }
+}
+
