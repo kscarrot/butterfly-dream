@@ -7,11 +7,11 @@ JMD 文档语言：Rust 核心解析器 + LSP + WASM 预览 + VS Code 扩展（M
 ## 结构
 
 ```text
-crates/doc-core   # 解析 / 校验 / 渲染（无 I/O，可编 WASM）
-crates/doc-lsp    # Language Server（tower-lsp）
-crates/doc-wasm   # WebAssembly 胶水层
-editors/vscode    # VS Code 扩展 + webview
-examples/         # .jmd 示例文档
+crates/doc-core            # 解析 / 校验 / 渲染（无 I/O，可编 WASM）
+crates/doc-core/examples/  # .rymd 示例 + preview 模板 / 渲染入口
+crates/doc-lsp             # Language Server（tower-lsp）
+crates/doc-wasm            # WebAssembly 胶水层
+editors/vscode             # VS Code 扩展 + webview
 ```
 
 ## 要求
@@ -29,15 +29,15 @@ cargo check -p doc-wasm
 # 一键构建（需 wasm-pack）
 pnpm run build:all
 
-# 编译扩展并用 Cursor 开发宿主打开 examples/
+# 编译 LSP+扩展，并用 Extension Development Host 打开本仓库（*.rymd → 语言 RYMD）
 pnpm run dev:vscode
+# 在新窗口里打开 crates/doc-core/examples/*.rymd；状态栏应显示 RYMD，不是 Plain Text
 
-# 把 examples/*.jmd 编译成同名 .html（如 guangwu.jmd → guangwu.html）
+# 把 crates/doc-core/examples/*.rymd 编译成同名 .html
 pnpm run dev:html
 ```
 
-
 ## 文件类型
 
-- 语言 ID：`jmd`
-- 扩展名：`.jmd`
+- 语言 ID：`rymd`
+- 扩展名：`.rymd`

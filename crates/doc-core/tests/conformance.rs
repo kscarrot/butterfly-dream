@@ -1,13 +1,13 @@
 use doc_core::{parse, render, validate, EntityKind, FootnoteKind, Severity};
 
 fn read_example(name: &str) -> String {
-    let path = format!("{}/../../examples/{name}", env!("CARGO_MANIFEST_DIR"));
+    let path = format!("{}/examples/{name}", env!("CARGO_MANIFEST_DIR"));
     std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {path}: {e}"))
 }
 
 #[test]
 fn guangwu_conformance() {
-    let src = read_example("guangwu.jmd");
+    let src = read_example("guangwu.rymd");
     let doc = parse(&src);
     let diags = validate(&doc);
     let out = render(&doc);
@@ -65,7 +65,7 @@ fn guangwu_conformance() {
 
 #[test]
 fn broken_links_conformance() {
-    let src = read_example("broken-links.jmd");
+    let src = read_example("broken-links.rymd");
     let doc = parse(&src);
     let diags = validate(&doc);
 

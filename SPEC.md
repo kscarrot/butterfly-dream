@@ -1,6 +1,6 @@
 # JMD 语言规范（v0.5）
 
-本文档是 **JMD**（文件扩展名 `.jmd`，语言 ID `jmd`）的规范性说明。  
+本文档是 **JMD / RYMD**（文件扩展名 `.rymd`，语言 ID `rymd`）的规范性说明。  
 实现（`doc-core` / `doc-lsp` / `doc-wasm`）与示例必须以本文为准；与 [MVP.md](MVP.md) 冲突时，以本 SPEC 为准。
 
 ---
@@ -19,7 +19,7 @@ JMD 建立在 **CommonMark + GFM** 之上，本版本能力分层如下：
 
 2. **软分段符**（写作时一句一行 / 可空行；编译合并为同一段）  
 3. 结构锚点 `{#id}`（文档内定位；站内跳转使用标准 Markdown 链接）  
-4. 文本染色（class / color）  
+4. 文本染色（`[text]{.class}`）  
 5. GFM 标准脚注（须支持点击跳转）  
 6. 侧栏修订标记（语法预留，行为后续补充）  
 7. TOML Frontmatter  
@@ -32,7 +32,7 @@ JMD 建立在 **CommonMark + GFM** 之上，本版本能力分层如下：
 
 | 术语 | 含义 |
 | --- | --- |
-| **源文档** | 完整 `.jmd` 文本，含可选 Frontmatter |
+| **源文档** | 完整 `.rymd` 文本，含可选 Frontmatter |
 | **正文** | 剥离 Frontmatter 后的主体 |
 | **实体（Entity）** | 人名 / 地名 / 时间 / 官职等历史语义对象 |
 | **实体 ID** | 知识库或权威库中的消歧键（可为数字或字符串） |
@@ -64,11 +64,21 @@ JMD 建立在 **CommonMark + GFM** 之上，本版本能力分层如下：
 1. 脚注 / 修订定义行 `[^…]:`（块级整行）  
 2. 修订引用 `[^c:…]`（先于普通脚注识别）  
 3. 括号形实体 `@[…]` / `&[…]` / `#[…]` / `$[…]`  
-4. 染色 `[text]{.class}` / `==text=={color=…}`  
+4. 染色 `[text]{.class}`  
 5. 结构锚点 `{#id}`  
 6. 普通 Markdown / GFM（含标准脚注 `[^label]`）  
 
-代码围栏与行内代码内扩展语法 **不生效**。软分段符在围栏内按字面保留。
+**嵌套**：
+
+- 染色可嵌套，且可包裹实体 / 脚注引用 / 修订引用 / 锚点 / 内层染色。  
+- 实体、脚注、修订、锚点为叶子：其内部不再解析 JMD 扩展。  
+- 配对用局部 opener 栈（O(N)）；行末未闭合的 `[` 放弃为普通文本。  
+- `text` 内 `\` 转义下一字符，使其不参与 `[` / `]` 定界（如 `[a\]b]{.red}`）。  
+- 例：`[&[南阳|nanyang]]{.note}`、`[[按]{.em}语]{.note}`。  
+
+
+JMD 正文 **不允许** Markdown 代码围栏（` ``` ` / `~~~`）与行内代码（`` `…` ``）。
+扫描阶段发现已闭合区域 → Warning，并从渲染正文抹除；未闭合 → Error。
 
 ---
 
@@ -229,7 +239,6 @@ marker = '@' / '&' / '#' / '$'
 | 时间实体 | 仅 `#[…]` |
 | GFM 脚注 | `[^label]` |
 | 结构锚点 | 仅 `{#struct-id}` |
-| 颜色值 | `{color=#ff5500}` 内的 `#` 属染色语法 |
 | 数学 | **关闭**；`$` 仅作 `$[…]` 官职前缀 |
 | HTML 实体 | `&nbsp;` 等仍按 Markdown；地名必须写成 `&[长安]` |
 
@@ -282,31 +291,25 @@ Entity {
 
 ## 9. 文本染色
 
-### 9.1 Class
+仅保留 class 形态；颜色由主题 CSS 映射（如 `.jmd-style.note`），不在正文嵌入色值。
 
 ```text
 '[' text ']' '{.' class-name '}'
 ```
 
-例：`[警告文本]{.red}`
+例：`[按语]{.note}`、`[警告文本]{.red}`
 
-### 9.2 Color
+`text` 内允许：普通字符、实体、脚注/修订引用、锚点、**嵌套染色**。  
+扫描以 opener 栈单遍配对：见 `[` 入栈，见合法 `]{.class}` 弹栈；叶子一次吃完不入栈。  
+`\` 转义下一字符不定界。染色不得跨行；行末未闭合帧丢弃（帧内已识别叶子仍生效）。
 
-```text
-'==' text '==' '{color=' color-value '}'
-color-value = '#' hex{3/6} | ident
-```
-
-例：`==重点内容=={color=#ff5500}`
-
-### 9.3 渲染
+渲染（Style 自外向内展开占位，再换叶子）：
 
 ```html
-<span class="jmd-style red">…</span>
-<span class="jmd-style" style="color:#ff5500">…</span>
+<span class="jmd-style note">…</span>
 ```
 
-非法颜色 → Warning，保留纯文本。
+非法 / 空 class → 不识别为染色（按普通 Markdown 括号文本处理）。
 
 ---
 
@@ -412,7 +415,7 @@ Document {
   body_byte_offset: u32
   entities: [Entity]
   anchors: [{ id, span }]
-  styled_spans: [{ text, class?, color?, span }]
+  styled_spans: [{ text, class, span }]
   revision_refs: [{ id, span }]       # [^c:rev_01]
   revision_defs: [{ id, content, span }]  # 可空；语义后续补
   footnotes: [{ label, span, kind: Ref | Def }]
@@ -442,14 +445,14 @@ RenderOutput {
 | 级别 | 用途 |
 | --- | --- |
 | Error | Frontmatter 无效、未闭合实体、脚注缺失定义 |
-| Warning | 重复结构锚点、未使用脚注、非法 color、（可选）未消歧实体 |
+| Warning | 重复结构锚点、未使用脚注、（可选）未消歧实体 |
 | Info | 预留（含修订标记待侧栏实现） |
 
 ---
 
 ## 14. 符合性用例
 
-### 14.1 `examples/guangwu.jmd`（光武纪摘录）
+### 14.1 `crates/doc-core/examples/guangwu.rymd`（光武纪摘录）
 
 | 检查项 | 期望 |
 | --- | --- |
@@ -463,7 +466,7 @@ RenderOutput {
 | 染色 | 按 §9 |
 | `validate` | 无 Error |
 
-### 14.2 `examples/broken-links.jmd`
+### 14.2 `crates/doc-core/examples/broken-links.rymd`
 
 | 检查项 | 期望 |
 | --- | --- |
@@ -482,13 +485,14 @@ RenderOutput {
 | 0.2 | 2026-11-25 | 历史实体核心；评论 `[^~id]` |
 | 0.3 | 2026-11-25 | 仅括号形实体；移除 Wikilink |
 | 0.4 | 2026-11-25 | 修订 `[^c:id]` 预留；脚注双向跳转 |
-| 0.5 | 2026-11-25 | 软分段符；符合性示例改为 `guangwu.jmd`；标记定为行尾 `\` |
+| 0.5 | 2026-11-25 | 软分段符；符合性示例改为 `guangwu.rymd`；标记定为行尾 `\` |
+| 0.6 | 2026-11-26 | 文件扩展名改为 `.rymd`，语言 ID `rymd`（避免与 Julia Markdown `.jmd` 冲突） |
 
 ---
 
 ## 附录 A. 最小示意（光武纪 + 软分段）
 
-```jmd
+```rymd
 +++
 title = "后汉书 · 光武帝纪（摘录）"
 +++

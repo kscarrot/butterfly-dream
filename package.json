@@ -7,8 +7,10 @@
     "build:wasm": "wasm-pack build crates/doc-wasm --target web --out-dir ../../editors/vscode/webview/pkg",
     "build:lsp": "cargo build --release -p doc-lsp && mkdir -p editors/vscode/bin && cp target/release/doc-lsp editors/vscode/bin/",
     "build:vscode": "pnpm --dir editors/vscode run compile",
+    "build:vsix": "pnpm run build:lsp && pnpm run build:vscode && pnpm --dir editors/vscode exec vsce package --no-dependencies --allow-missing-repository -o ../../butterfly-dream.vsix",
+    "install:vscode": "pnpm run build:vsix && cursor --install-extension ./butterfly-dream.vsix --force && echo 'Reload Cursor window (Cmd+Shift+P → Developer: Reload Window) to pick up the extension.'",
     "build:all": "pnpm run build:wasm && pnpm run build:lsp && pnpm run build:vscode",
-    "dev:vscode": "pnpm run build:vscode && cursor --extensionDevelopmentPath=./editors/vscode ./examples",
+    "dev:vscode": "pnpm run install:vscode && cursor --classic -n ./crates/doc-core/examples",
     "dev:html": "cargo run -q -p doc-core --example render_examples"
   }
 }

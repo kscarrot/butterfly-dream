@@ -1,6 +1,9 @@
 mod diagnostics;
 mod folding;
+mod hover;
 mod navigation;
+mod presentation;
+mod semantic;
 mod server;
 
 use tower_lsp::{LspService, Server};

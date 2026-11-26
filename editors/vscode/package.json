@@ -2,7 +2,7 @@
   "$schema": "./package.schema.json",
   "name": "butterfly-dream",
   "displayName": "Butterfly Dream",
-  "description": "Language support and preview for jmd documents",
+  "description": "Language support and preview for rymd documents",
   "version": "0.1.0",
   "publisher": "butterfly-dream",
   "engines": {
@@ -15,24 +15,111 @@
   "contributes": {
     "languages": [
       {
-        "id": "jmd",
+        "id": "rymd",
         "aliases": [
-          "JMD",
-          "jmd"
+          "RYMD",
+          "Butterfly Dream",
+          "rymd"
         ],
         "extensions": [
-          ".jmd"
+          ".rymd"
         ],
-        "configuration": "./language-configuration.json"
+        "firstLine": "^\\+\\+\\+",
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/rymd-light.svg",
+          "dark": "./icons/rymd-dark.svg"
+        }
       }
     ],
     "grammars": [
       {
-        "language": "jmd",
-        "scopeName": "source.jmd",
-        "path": "./syntaxes/jmd.tmLanguage.json"
+        "language": "rymd",
+        "scopeName": "source.rymd",
+        "path": "./syntaxes/rymd.tmLanguage.json",
+        "embeddedLanguages": {
+          "meta.embedded.block.toml": "toml"
+        }
       }
     ],
+    "semanticTokenTypes": [
+      {
+        "id": "jmd_entity_person",
+        "description": "RYMD person entity display name"
+      },
+      {
+        "id": "jmd_entity_place",
+        "description": "RYMD place entity display name"
+      },
+      {
+        "id": "jmd_entity_time",
+        "description": "RYMD time entity display name"
+      },
+      {
+        "id": "jmd_entity_office",
+        "description": "RYMD office entity display name"
+      },
+      {
+        "id": "jmd_footnote",
+        "description": "RYMD footnote ref/def"
+      },
+      {
+        "id": "jmd_revision",
+        "description": "RYMD revision ref/def"
+      }
+    ],
+    "semanticTokenScopes": [
+      {
+        "language": "rymd",
+        "scopes": {
+          "jmd_entity_person": [
+            "entity.name.rymd.person"
+          ],
+          "jmd_entity_place": [
+            "entity.name.rymd.place"
+          ],
+          "jmd_entity_time": [
+            "entity.name.rymd.time"
+          ],
+          "jmd_entity_office": [
+            "entity.name.rymd.office"
+          ],
+          "jmd_footnote": [
+            "entity.name.tag.footnote.rymd"
+          ],
+          "jmd_revision": [
+            "entity.name.tag.revision.rymd"
+          ]
+        }
+      }
+    ],
+    "configurationDefaults": {
+      "[rymd]": {
+        "editor.semanticHighlighting.enabled": true
+      },
+      "editor.semanticTokenColorCustomizations": {
+        "rules": {
+          "jmd_entity_person": {
+            "foreground": "#8b1a1a",
+            "bold": true
+          },
+          "jmd_entity_place": {
+            "foreground": "#1a5f2a",
+            "bold": true
+          },
+          "jmd_entity_time": {
+            "foreground": "#6b4a1a",
+            "bold": true
+          },
+          "jmd_entity_office": {
+            "foreground": "#2a2a7a",
+            "bold": true
+          },
+          "jmd_footnote": "#6a6a6a",
+          "jmd_revision": "#7a5a2a"
+        }
+      }
+    },
     "commands": [
       {
         "command": "butterflyDream.openPreview",
@@ -41,12 +128,18 @@
     ]
   },
   "scripts": {
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./"
+    "compile": "tsc -p ./ && node esbuild.mjs",
+    "watch": "tsc -watch -p ./",
+    "package": "pnpm run compile && vsce package --no-dependencies --allow-missing-repository"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
     "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^4.1.1",
+    "esbuild": "^0.25.12",
     "typescript": "^5.7.2"
   }
 }

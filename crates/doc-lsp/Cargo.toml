@@ -13,4 +13,5 @@ path = "src/main.rs"
 doc-core = { workspace = true }
 tower-lsp = { workspace = true }
 tokio = { workspace = true }
+serde = { workspace = true }
 serde_json = { workspace = true }

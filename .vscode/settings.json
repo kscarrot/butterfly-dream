@@ -1,5 +1,8 @@
 {
   "editor.fontLigatures": true,
   "editor.fontFamily": "Fira Code,Microsoft Yahei UI, monospace",
-  "terminal.integrated.fontFamily": "Menlo, Monaco, 'Courier New', monospace"
+  "terminal.integrated.fontFamily": "Menlo, Monaco, 'Courier New', monospace",
+  "files.associations": {
+    "*.rymd": "rymd"
+  }
 }

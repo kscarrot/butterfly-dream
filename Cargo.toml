@@ -17,6 +17,7 @@ markdown = { version = "1.0.0", features = ["serde"] }
 toml = "1.2"
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
+unicode-script = "0.5.9"
 tower-lsp = "0.20.0"
 tokio = { version = "1.54.1", features = ["full"] }
 wasm-bindgen = "0.2.130"

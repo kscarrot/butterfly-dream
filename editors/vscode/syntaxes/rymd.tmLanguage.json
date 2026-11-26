@@ -1,0 +1,46 @@
+{
+  "name": "RYMD",
+  "scopeName": "source.rymd",
+  "patterns": [
+    { "include": "#frontmatter" },
+    { "include": "#heading" },
+    { "include": "#soft-join" },
+    { "include": "#styled-span" },
+    { "include": "#comment" },
+    { "include": "text.html.markdown" }
+  ],
+  "repository": {
+    "frontmatter": {
+      "name": "meta.frontmatter.rymd",
+      "begin": "^\\+\\+\\+$",
+      "end": "^\\+\\+\\+$",
+      "beginCaptures": {
+        "0": { "name": "punctuation.definition.frontmatter.rymd" }
+      },
+      "endCaptures": {
+        "0": { "name": "punctuation.definition.frontmatter.rymd" }
+      },
+      "contentName": "meta.embedded.block.toml",
+      "patterns": [{ "include": "source.toml" }]
+    },
+    "heading": {
+      "name": "markup.heading.rymd",
+      "match": "^#{1,6}\\s+.+$"
+    },
+    "soft-join": {
+      "name": "keyword.operator.soft-join.rymd",
+      "match": "\\\\\\s*$"
+    },
+    "styled-span": {
+      "name": "meta.styled-span.rymd",
+      "match": "\\[[^\\]]+\\]\\{\\.[^}]+\\}",
+      "captures": {
+        "0": { "name": "markup.italic.rymd" }
+      }
+    },
+    "comment": {
+      "name": "comment.line.double-slash.rymd",
+      "match": "//.*$"
+    }
+  }
+}

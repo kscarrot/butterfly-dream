@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::ast::{Document, EntityKind};
+use crate::placeholder::Placeholder;
 
 /// 预览用结构化输出（正文 HTML + 侧栏数据）。
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -45,7 +46,8 @@ fn jmd_options() -> Options {
     }
 }
 
-fn html_escape(s: &str) -> String {
+/// HTML 属性 / 文本转义（example 等也复用）。
+pub fn html_escape(s: &str) -> String {
     s.replace('&', "&amp;")
         .replace('<', "&lt;")
         .replace('>', "&gt;")
@@ -69,18 +71,38 @@ fn entity_html(kind: EntityKind, name: &str, id: Option<&str>) -> String {
     }
 }
 
-fn style_html(text: &str, class: Option<&str>, color: Option<&str>) -> String {
-    let escaped = html_escape(text);
-    if let Some(c) = class {
-        format!(r#"<span class="jmd-style {}">{escaped}</span>"#, html_escape(c))
-    } else if let Some(col) = color {
-        format!(
-            r#"<span class="jmd-style" style="color:{}">{escaped}</span>"#,
-            html_escape(col)
-        )
-    } else {
-        escaped
+/// 转义普通文本，保留已嵌入的 `%%JMD_*%%` 占位符（供染色内层实体等二次替换）。
+fn escape_preserving_placeholders(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    let mut i = 0;
+    while i < s.len() {
+        if s[i..].starts_with("%%JMD_") {
+            if let Some(rel) = s[i + 6..].find("%%") {
+                let end = i + 6 + rel + 2;
+                out.push_str(&s[i..end]);
+                i = end;
+                continue;
+            }
+        }
+        let ch = s[i..].chars().next().unwrap();
+        match ch {
+            '&' => out.push_str("&amp;"),
+            '<' => out.push_str("&lt;"),
+            '>' => out.push_str("&gt;"),
+            '"' => out.push_str("&quot;"),
+            _ => out.push(ch),
+        }
+        i += ch.len_utf8();
     }
+    out
+}
+
+fn style_html(text: &str, class: &str) -> String {
+    format!(
+        r#"<span class="jmd-style {}">{}</span>"#,
+        html_escape(class),
+        escape_preserving_placeholders(text)
+    )
 }
 
 fn revision_html(id: &str) -> String {
@@ -98,25 +120,22 @@ pub fn render(doc: &Document) -> RenderOutput {
     let mut opts = jmd_options();
     opts.compile.allow_dangerous_html = true;
 
-    for (i, e) in doc.entities.iter().enumerate() {
-        let ph = format!("%%JMD_E_{i}%%");
-        let html = entity_html(e.kind, &e.name, e.entity_id.as_deref());
-        md_src = md_src.replace(&ph, &html);
+    // 先展开染色：外层 index 更大且内文可含内层 Style/叶子占位符，故自高向低替换
+    for (i, s) in doc.styled_spans.iter().enumerate().rev() {
+        let html = style_html(&s.text, &s.class);
+        md_src = md_src.replace(&Placeholder::Style.format(i), &html);
     }
-    for (i, s) in doc.styled_spans.iter().enumerate() {
-        let ph = format!("%%JMD_S_{i}%%");
-        let html = style_html(&s.text, s.class.as_deref(), s.color.as_deref());
-        md_src = md_src.replace(&ph, &html);
+    for (i, e) in doc.entities.iter().enumerate() {
+        let html = entity_html(e.kind, &e.name, e.entity_id.as_deref());
+        md_src = md_src.replace(&Placeholder::Entity.format(i), &html);
     }
     for (i, r) in doc.revision_refs.iter().enumerate() {
-        let ph = format!("%%JMD_R_{i}%%");
         let html = revision_html(&r.id);
-        md_src = md_src.replace(&ph, &html);
+        md_src = md_src.replace(&Placeholder::Revision.format(i), &html);
     }
     for (i, a) in doc.anchors.iter().enumerate() {
-        let ph = format!("%%JMD_A_{i}%%");
         let html = format!(r#"<span id="{}"></span>"#, html_escape(&a.id));
-        md_src = md_src.replace(&ph, &html);
+        md_src = md_src.replace(&Placeholder::Anchor.format(i), &html);
     }
 
     let body_html = match markdown::to_html_with_options(&md_src, &opts) {

@@ -45,6 +45,15 @@ impl EntityKind {
             _ => None,
         }
     }
+
+    /// `s` 是否以实体开标记开头（如 `@[` / `&[`）。
+    pub fn starts_at(s: &str) -> bool {
+        let mut chars = s.chars();
+        match chars.next() {
+            Some(c) if Self::from_marker(c).is_some() => chars.as_str().starts_with('['),
+            _ => false,
+        }
+    }
 }
 
 /// 括号形实体，如 `@[唐太宗|1024]`（左侧为原文可见字）。
@@ -53,7 +62,10 @@ pub struct Entity {
     pub kind: EntityKind,
     pub name: String,
     pub entity_id: Option<String>,
+    /// 整段 `@[…]` / `&[…]` 等。
     pub span: Span,
+    /// 显示名（第一个 label）在源文档中的区间；供 LSP 只染/只露 name。
+    pub name_span: Span,
 }
 
 /// 结构锚点：`{#id}`
@@ -63,12 +75,14 @@ pub struct Anchor {
     pub span: Span,
 }
 
-/// 染色：`[text]{.class}` 或 `==text=={color=#ff5500}`
+/// 染色：`[text]{.class}`（颜色由 CSS 主题决定）。
+///
+/// `text` 为扫描后的**渲染片段**，可含内层叶子 / 嵌套染色的 `%%JMD_*%%` 占位符，
+/// 而非源文本原文。
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct StyledSpan {
     pub text: String,
-    pub class: Option<String>,
-    pub color: Option<String>,
+    pub class: String,
     pub span: Span,
 }
 

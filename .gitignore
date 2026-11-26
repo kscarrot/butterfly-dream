@@ -9,10 +9,11 @@ editors/vscode/bin/*
 !editors/vscode/bin/.gitkeep
 editors/vscode/webview/pkg/
 *.vsix
+/butterfly-dream.vsix
 *.tsbuildinfo
 
 # Generated HTML previews from `pnpm run dev:html`
-examples/*.html
+crates/doc-core/examples/*.html
 
 # OS / editor
 .DS_Store
